@@ -874,9 +874,9 @@ function openPlaceInfo(place, position) {
     place.hasBraille ? '점자메뉴판' : '',
     place.hasAccess ? '접근성 우수' : ''
   ].filter(Boolean).join(' · ');
-  const kakaoQuery = encodeURIComponent(buildKakaoSearchQuery(place));
-  const kakaoUrl = `https://map.kakao.com/link/search/${kakaoQuery}`;
-  const kakaoLabel = escapeHtml(`${place.name}을 카카오맵에서 보기`);
+  const mapQuery = encodeURIComponent(buildExternalMapSearchQuery(place));
+  const naverUrl = `https://map.naver.com/p/search/${mapQuery}`;
+  const naverLabel = escapeHtml(`${place.name}을 네이버지도에서 보기`);
   activeInfoWindow = new kakao.maps.InfoWindow({
     position,
     removable: false,
@@ -885,13 +885,13 @@ function openPlaceInfo(place, position) {
         <strong>${escapeHtml(place.name)}</strong>
         <span>${escapeHtml(place.type || badges || '')}</span>
         <span>${escapeHtml(place.address || '')}</span>
-        <a class="map-open-link" href="${kakaoUrl}" target="_blank" rel="noopener noreferrer" aria-label="${kakaoLabel}">카카오맵에서 보기</a>
+        <a class="map-open-link" href="${naverUrl}" target="_blank" rel="noopener noreferrer" aria-label="${naverLabel}">네이버지도에서 보기</a>
       </div>`
   });
   activeInfoWindow.open(map);
 }
 
-function buildKakaoSearchQuery(place) {
+function buildExternalMapSearchQuery(place) {
   const districtHint = districtForPlaceSearch(place.address);
   const addressHint = compactAddressForPlaceSearch(place.address);
   return [place.name, districtHint, addressHint].filter(Boolean).join(' ');
