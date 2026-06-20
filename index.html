@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>우리 동네 배리어프리 지도 | 종로구</title>
+<link rel="icon" type="image/png" href="app-icon.png">
+<link rel="apple-touch-icon" href="app-icon.png">
+<meta name="theme-color" content="#2E8B6A">
+<meta property="og:title" content="우리 동네 배리어프리 지도">
+<meta property="og:description" content="종로구 배리어프리 가게 안내 지도">
+<meta property="og:image" content="app-icon.png">
 
 <!-- 카카오맵 SDK: 80997111825554ef64ddb0481b4c0a76 를 실제 키로 교체하세요 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=80997111825554ef64ddb0481b4c0a76&libraries=services"></script>
@@ -613,6 +619,8 @@ const CONFIG = {
 
   // 관리자 모드 임시 비밀번호
   ADMIN_PASSWORD: '0517',
+
+  GEOCODE_CACHE_KEY: 'jongno-bf-map-geocode-cache-v1',
 };
 
 // ══════════════════════════════════════════════════════════
@@ -632,6 +640,7 @@ let activeInfoWindow = null;
 let panelOpen     = true;
 let adminUnlocked = false;
 let activeStatFilter = 'total';
+let geocodeCache = loadGeocodeCache();
 
 
 function updateFilterCounts() {
@@ -933,6 +942,21 @@ function escapeHtml(value) {
 
 function geocodePlace(place, options = {}) {
   if (!geocoder || !place.address) return;
+  const cacheKey = normalizeGeocodeCacheKey(place.address);
+  const cached = geocodeCache[cacheKey];
+  if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lng)) {
+    place.lat = cached.lat;
+    place.lng = cached.lng;
+    addPlaceMarker(place);
+    if (options.openInfo) {
+      const pos = new kakao.maps.LatLng(place.lat, place.lng);
+      map.setCenter(pos);
+      map.setLevel(4);
+      openPlaceInfo(place, pos);
+    }
+    return;
+  }
+
   const rawAddr = place.address
     .replace(/^서울특별시\s*/g, '')
     .replace(/^서울시\s*/g, '')
@@ -944,6 +968,8 @@ function geocodePlace(place, options = {}) {
     if (status !== kakao.maps.services.Status.OK || !result[0]) return;
     place.lat = parseFloat(result[0].y);
     place.lng = parseFloat(result[0].x);
+    geocodeCache[cacheKey] = { lat: place.lat, lng: place.lng };
+    saveGeocodeCache();
     addPlaceMarker(place);
     if (options.openInfo) {
       const pos = new kakao.maps.LatLng(place.lat, place.lng);
@@ -952,6 +978,29 @@ function geocodePlace(place, options = {}) {
       openPlaceInfo(place, pos);
     }
   });
+}
+
+function normalizeGeocodeCacheKey(address) {
+  return String(address || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function loadGeocodeCache() {
+  try {
+    return JSON.parse(localStorage.getItem(CONFIG.GEOCODE_CACHE_KEY) || '{}');
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveGeocodeCache() {
+  try {
+    localStorage.setItem(CONFIG.GEOCODE_CACHE_KEY, JSON.stringify(geocodeCache));
+  } catch (_) {
+    // 저장 공간이 부족하거나 비공개 모드면 캐시 없이 동작합니다.
+  }
 }
 
 // ??????????????????????????????????????????????????????????
