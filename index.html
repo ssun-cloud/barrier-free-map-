@@ -145,12 +145,23 @@ select:focus-visible,
   padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
   border: 1.5px solid var(--gray-200); color: var(--gray-600); background: #fff;
   transition: all .15s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 5px;
 }
 .filter-chip.active-ramp  { border-color: var(--green); color: var(--green); background: var(--green-l); }
 .filter-chip.active-braille { border-color: var(--blue); color: var(--blue); background: var(--blue-l); }
 .filter-chip.active-all   { border-color: var(--gray-800); color: var(--gray-800); background: var(--gray-100); }
 .filter-chip.active-both { border-color: #7C3AED; color: #5B21B6; background: #F3E8FF; }
 .filter-chip.active-access { border-color: var(--yellow); color: #7A5600; background: var(--yellow-l); }
+
+/* 칩 색상 점 (지도 마커 색과 동일 — 범례 역할) */
+.filter-chip::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+#chip-all::before    { display: none; }
+#chip-ramp::before    { background: #2E8B6A; }
+#chip-braille::before { background: #3A7BD5; }
+#chip-both::before    { background: #7C3AED; }
+#chip-access::before  { display: none; }
 
 /* 지역 필터 */
 #region-filter { padding: 0 16px 10px; flex-shrink: 0; }
@@ -359,17 +370,6 @@ button.place-item {
 }
 #public-banner.show { display: block; }
 
-/* ── 지도 범례 ── */
-#map-legend {
-  position: absolute; bottom: 20px; right: 12px;
-  background: #fff; border-radius: 10px;
-  box-shadow: var(--shadow); padding: 10px 12px;
-  z-index: 90; font-size: 11px; color: var(--gray-600);
-  display: flex; flex-direction: column; gap: 5px;
-}
-.legend-item { display: flex; align-items: center; gap: 6px; }
-.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
 .place-info-window {
   width: 240px;
   max-width: 72vw;
@@ -464,11 +464,6 @@ button.place-item {
   #map-footer { display: none; }
   #public-banner,
   #detail-panel { display: none !important; }
-  #map-legend {
-    bottom: 10px; right: 8px; left: auto;
-    padding: 7px 9px; gap: 3px; font-size: 10px;
-  }
-  .legend-dot { width: 8px; height: 8px; }
   #stats-bar {
     display: none;
     top: 56px; right: 8px; left: 8px;
@@ -608,13 +603,6 @@ button.place-item {
       <div id="public-banner" class="show">♿ 배리어프리 가게를 찾아보세요</div>
 
       <!-- 지도 범례 -->
-      <div id="map-legend" aria-hidden="true">
-        <div class="legend-item"><span class="legend-dot" style="background:#2E8B6A"></span>경사로</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#3A7BD5"></span>점자메뉴판</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#F5C518"></span>추천상점</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#7C3AED"></span>2개 이상 해당</div>
-      </div>
-
       <!-- 관리자 통계 -->
       <div id="stats-bar">
         <button class="stat-item" type="button" data-stat-filter="total" onclick="applyAdminStatFilter('total')" aria-label="전체 항목 보기"><div class="stat-num" id="stat-total" style="color:var(--gray-800)">0</div><div class="stat-label">전체</div></button>
@@ -1419,6 +1407,8 @@ function setMode(mode) {
 
   closeDetail();
   onSearch();
+  updateFilterCounts();
+  updateStats();
 }
 
 function ensureAdminUnlocked() {
