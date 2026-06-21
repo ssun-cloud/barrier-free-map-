@@ -439,25 +439,25 @@ button.place-item {
   #side-panel {
     position: relative;
     width: 100%;
-    height: 24vh;
-    min-height: 160px;
-    max-height: 220px;
+    height: 42vh;
+    min-height: 280px;
+    max-height: 420px;
     border-right: none;
     border-bottom: 1px solid var(--gray-200);
     box-shadow: var(--shadow-sm);
     z-index: 120;
   }
   #side-panel.collapsed { height: 54px; overflow: hidden; }
-  #map-wrap { width: 100%; flex: 1; min-height: 0; }
-  #search-area { padding: 8px 12px 6px; }
-  #search-box { padding: 6px 10px; margin-bottom: 6px; }
-  #region-filter { padding: 0 12px 6px; }
+  #map-wrap { width: 100%; flex: 1; min-height: 120px; }
+  #search-area { padding: 10px 12px 8px; }
+  #search-box { padding: 7px 10px; margin-bottom: 8px; }
+  #region-filter { padding: 0 12px 8px; }
   #admin-filter,
   #list-header { display: none !important; }
   #place-list { flex: 1; min-height: 0; overflow-y: auto; }
-  .place-item { padding: 7px 12px; gap: 8px; }
-  .place-item .place-icon { width: 26px; height: 26px; font-size: 13px; margin-top: 0; }
-  .place-item .place-name { font-size: 13px; margin-bottom: 2px; }
+  .place-item { padding: 10px 12px; gap: 10px; }
+  .place-item .place-icon { width: 32px; height: 32px; font-size: 15px; margin-top: 0; }
+  .place-item .place-name { font-size: 14px; margin-bottom: 3px; }
   .place-item .place-type,
   .place-item .place-addr { font-size: 11px; margin-bottom: 2px; }
   .badge { padding: 1px 7px; font-size: 10px; }
@@ -543,7 +543,7 @@ button.place-item {
           <button class="filter-chip active-all" id="chip-all" type="button" aria-pressed="true" onclick="setFilter('all')">전체</button>
           <button class="filter-chip" id="chip-ramp" type="button" aria-pressed="false" onclick="setFilter('ramp')">경사로</button>
           <button class="filter-chip" id="chip-braille" type="button" aria-pressed="false" onclick="setFilter('braille')">점자메뉴판</button>
-          <button class="filter-chip" id="chip-both" type="button" aria-pressed="false" onclick="setFilter('both')">둘 다</button>
+          <button class="filter-chip" id="chip-both" type="button" aria-pressed="false" onclick="setFilter('both')">2개 이상 해당</button>
           <button class="filter-chip" id="chip-access" type="button" aria-pressed="false" onclick="setFilter('access')">😊 접근성 좋은 상점</button>
         </div>
       </div>
@@ -708,10 +708,10 @@ function updateFilterCounts() {
     all:     base.length,
     ramp:    base.filter(p => p.hasRamp).length,
     braille: base.filter(p => p.hasBraille).length,
-    both:    base.filter(p => p.hasRamp && p.hasBraille).length,
+    both:    base.filter(p => [p.hasRamp, p.hasBraille, p.hasAccess].filter(Boolean).length >= 2).length,
     access:  base.filter(p => p.hasAccess).length,
   };
-  const labels = { all:'전체', ramp:'경사로', braille:'점자메뉴판', both:'둘 다', access:'😊 접근성 좋은 상점' };
+  const labels = { all:'전체', ramp:'경사로', braille:'점자메뉴판', both:'2개 이상 해당', access:'😊 접근성 좋은 상점' };
   const ids = { all:'chip-all', ramp:'chip-ramp', braille:'chip-braille', both:'chip-both', access:'chip-access' };
   Object.keys(counts).forEach(k => {
     const el = document.getElementById(ids[k]);
@@ -1091,7 +1091,7 @@ function onSearch() {
     // 배리어프리 필터
     if (currentFilter === 'ramp'    && !p.hasRamp)    return false;
     if (currentFilter === 'braille' && !p.hasBraille) return false;
-    if (currentFilter === 'both'    && !(p.hasRamp && p.hasBraille)) return false;
+    if (currentFilter === 'both'    && [p.hasRamp, p.hasBraille, p.hasAccess].filter(Boolean).length < 2) return false;
     if (currentFilter === 'access'  && !p.hasAccess)  return false;
 
     return true;
@@ -1191,7 +1191,7 @@ function announceSearchResult() {
     all: '전체',
     ramp: '경사로',
     braille: '점자메뉴판',
-    both: '경사로와 점자메뉴판 모두',
+    both: '경사로·점자메뉴판·추천상점 중 2개 이상 해당',
     access: '접근성 좋은 상점'
   }[currentFilter] || '전체';
   statusEl.textContent = `${modeText}, ${filterText} 조건으로 ${filtered.length}곳이 표시됩니다.`;
