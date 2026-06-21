@@ -359,6 +359,17 @@ button.place-item {
 }
 #public-banner.show { display: block; }
 
+/* ── 지도 범례 ── */
+#map-legend {
+  position: absolute; bottom: 20px; right: 12px;
+  background: #fff; border-radius: 10px;
+  box-shadow: var(--shadow); padding: 10px 12px;
+  z-index: 90; font-size: 11px; color: var(--gray-600);
+  display: flex; flex-direction: column; gap: 5px;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
 .place-info-window {
   width: 240px;
   max-width: 72vw;
@@ -453,6 +464,11 @@ button.place-item {
   #map-footer { display: none; }
   #public-banner,
   #detail-panel { display: none !important; }
+  #map-legend {
+    bottom: 10px; right: 8px; left: auto;
+    padding: 7px 9px; gap: 3px; font-size: 10px;
+  }
+  .legend-dot { width: 8px; height: 8px; }
   #stats-bar {
     display: none;
     top: 56px; right: 8px; left: 8px;
@@ -590,6 +606,14 @@ button.place-item {
 
       <!-- 공개용 배너 -->
       <div id="public-banner" class="show">♿ 배리어프리 가게를 찾아보세요</div>
+
+      <!-- 지도 범례 -->
+      <div id="map-legend" aria-hidden="true">
+        <div class="legend-item"><span class="legend-dot" style="background:#2E8B6A"></span>경사로</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#3A7BD5"></span>점자메뉴판</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#F5C518"></span>추천상점</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#7C3AED"></span>2개 이상 해당</div>
+      </div>
 
       <!-- 관리자 통계 -->
       <div id="stats-bar">
@@ -879,7 +903,8 @@ function renderMarkers() {
 function addPlaceMarker(place) {
   if (place._marker) return;
   const pos = new kakao.maps.LatLng(place.lat, place.lng);
-  const color = place.hasRamp && place.hasBraille ? '#7C3AED' :
+  const featureCount = [place.hasRamp, place.hasBraille, place.hasAccess].filter(Boolean).length;
+  const color = featureCount >= 2 ? '#7C3AED' :
                 place.hasRamp ? '#2E8B6A' :
                 place.hasBraille ? '#3A7BD5' :
                 place.hasAccess ? '#F5C518' : '#94A3B8';
