@@ -382,6 +382,22 @@ button.place-item {
   word-break: keep-all;
   overflow-wrap: break-word;
 }
+.place-info-window .iw-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.place-info-window .iw-badge {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.place-info-window .iw-badge-ramp    { background: var(--green-l); color: var(--green-d); }
+.place-info-window .iw-badge-braille { background: var(--blue-l);  color: var(--blue); }
+.place-info-window .iw-badge-access  { background: var(--yellow-l); color: #7A5600; }
 .place-info-window .map-open-link {
   display: block;
   margin-top: 10px;
@@ -412,9 +428,9 @@ button.place-item {
   #side-panel {
     position: relative;
     width: 100%;
-    height: 34vh;
-    min-height: 210px;
-    max-height: 290px;
+    height: 24vh;
+    min-height: 160px;
+    max-height: 220px;
     border-right: none;
     border-bottom: 1px solid var(--gray-200);
     box-shadow: var(--shadow-sm);
@@ -422,21 +438,38 @@ button.place-item {
   }
   #side-panel.collapsed { height: 54px; overflow: hidden; }
   #map-wrap { width: 100%; flex: 1; min-height: 0; }
-  #search-area { padding: 10px 12px 8px; }
-  #search-box { padding: 7px 10px; margin-bottom: 8px; }
-  #region-filter { padding: 0 12px 8px; }
+  #search-area { padding: 8px 12px 6px; }
+  #search-box { padding: 6px 10px; margin-bottom: 6px; }
+  #region-filter { padding: 0 12px 6px; }
   #admin-filter,
   #list-header { display: none !important; }
   #place-list { flex: 1; min-height: 0; overflow-y: auto; }
-  .place-item { padding: 10px 12px; }
-  .place-item .place-icon { width: 30px; height: 30px; font-size: 14px; }
-  .place-item .place-name { font-size: 14px; }
+  .place-item { padding: 7px 12px; gap: 8px; }
+  .place-item .place-icon { width: 26px; height: 26px; font-size: 13px; margin-top: 0; }
+  .place-item .place-name { font-size: 13px; margin-bottom: 2px; }
   .place-item .place-type,
-  .place-item .place-addr { font-size: 12px; }
+  .place-item .place-addr { font-size: 11px; margin-bottom: 2px; }
+  .badge { padding: 1px 7px; font-size: 10px; }
   #map-footer { display: none; }
   #public-banner,
-  #stats-bar,
   #detail-panel { display: none !important; }
+  #stats-bar {
+    display: none;
+    top: 56px; right: 8px; left: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 8px 12px;
+    box-shadow: var(--shadow);
+    border-radius: 10px;
+  }
+  #stats-bar.show { display: flex; }
+  #stats-bar .stat-item { flex-shrink: 0; }
+  #stats-bar .stat-num { font-size: 14px; }
+  #stats-bar .stat-label { font-size: 10px; }
+  body.admin-mobile #admin-filter { display: block !important; padding: 0 12px 6px !important; }
+  body.admin-mobile #admin-filter select { padding: 5px 8px; font-size: 12px; }
+  body.admin-mobile #list-header { display: flex !important; padding: 4px 12px; }
   #my-location-btn { top: 10px; left: 10px; padding: 8px 11px; font-size: 12px; }
   #panel-toggle { display: none; }
 }
@@ -502,7 +535,7 @@ button.place-item {
       <!-- 지역 필터 -->
       <div id="region-filter">
         <label class="sr-only" for="region-select">지역 선택</label>
-        <select id="region-select" onchange="onSearch()">
+        <select id="region-select" onchange="onRegionChange()">
           <option value="">전체 지역</option>
         </select>
       </div>
@@ -878,11 +911,11 @@ function createPinImage(color) {
 
 function openPlaceInfo(place, position) {
   closeActiveInfoWindow();
-  const badges = [
-    place.hasRamp ? '경사로' : '',
-    place.hasBraille ? '점자메뉴판' : '',
-    place.hasAccess ? '접근성 우수' : ''
-  ].filter(Boolean).join(' · ');
+  const badgeHtml = [
+    place.hasRamp    ? '<span class="iw-badge iw-badge-ramp">♿ 경사로</span>' : '',
+    place.hasBraille ? '<span class="iw-badge iw-badge-braille">⠿ 점자메뉴판</span>' : '',
+    place.hasAccess  ? '<span class="iw-badge iw-badge-access">😊 추천상점</span>' : ''
+  ].filter(Boolean).join('');
   const mapQuery = encodeURIComponent(buildExternalMapSearchQuery(place));
   const naverUrl = `https://map.naver.com/p/search/${mapQuery}`;
   const naverLabel = escapeHtml(`${place.name}을 네이버지도에서 보기`);
@@ -892,8 +925,9 @@ function openPlaceInfo(place, position) {
     content: `
       <div class="place-info-window">
         <strong>${escapeHtml(place.name)}</strong>
-        <span>${escapeHtml(place.type || badges || '')}</span>
+        <span>${escapeHtml(place.type || '')}</span>
         <span>${escapeHtml(place.address || '')}</span>
+        ${badgeHtml ? `<div class="iw-badges">${badgeHtml}</div>` : ''}
         <a class="map-open-link" href="${naverUrl}" target="_blank" rel="noopener noreferrer" aria-label="${naverLabel}">네이버지도에서 보기</a>
       </div>`
   });
@@ -1043,6 +1077,43 @@ function onSearch() {
   updateStats();
   updateStatActiveStates();
   announceSearchResult();
+}
+
+function onRegionChange() {
+  onSearch();
+  moveMapToRegion(document.getElementById('region-select').value);
+}
+
+function moveMapToRegion(region) {
+  if (!map) return;
+
+  if (!region) {
+    map.setCenter(new kakao.maps.LatLng(CONFIG.CENTER.lat, CONFIG.CENTER.lng));
+    map.setLevel(CONFIG.ZOOM);
+    return;
+  }
+
+  const placesInRegion = allData.filter(p => p.region === region);
+  const withCoords = placesInRegion.filter(p => p.lat && p.lng);
+
+  if (withCoords.length > 0) {
+    const avgLat = withCoords.reduce((sum, p) => sum + p.lat, 0) / withCoords.length;
+    const avgLng = withCoords.reduce((sum, p) => sum + p.lng, 0) / withCoords.length;
+    map.setCenter(new kakao.maps.LatLng(avgLat, avgLng));
+    map.setLevel(5);
+    return;
+  }
+
+  // 좌표가 아직 없으면(지오코딩 전) 지역명으로 직접 검색해서 이동
+  if (geocoder) {
+    geocoder.addressSearch('서울 종로구 ' + region, (result, status) => {
+      if (status === kakao.maps.services.Status.OK && result[0]) {
+        const pos = new kakao.maps.LatLng(parseFloat(result[0].y), parseFloat(result[0].x));
+        map.setCenter(pos);
+        map.setLevel(5);
+      }
+    });
+  }
 }
 
 function setFilter(f) {
@@ -1319,6 +1390,7 @@ function setMode(mode) {
   document.getElementById('stats-bar').classList.toggle('show', mode === 'admin');
   document.getElementById('public-banner').classList.toggle('show', mode === 'public');
   document.getElementById('list-mode-label').textContent = mode === 'admin' ? '관리자 모드' : '';
+  document.body.classList.toggle('admin-mobile', mode === 'admin');
 
   closeDetail();
   onSearch();
