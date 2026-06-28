@@ -211,7 +211,9 @@ button.place-item {
   margin-top: 1px;
 }
 .place-item .place-info { flex: 1; min-width: 0; }
-.place-item .place-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.place-item .place-name-row { display: flex; align-items: baseline; gap: 5px; margin-bottom: 4px; min-width: 0; }
+.place-item .place-name { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.place-item .place-type { font-size: 12px; color: var(--gray-400); font-weight: 500; flex-shrink: 0; }
 .place-item .place-region { font-size: 13px; color: var(--gray-400); margin-bottom: 5px; }
 .place-item .place-badges { display: flex; gap: 4px; flex-wrap: wrap; }
 .place-item .place-memo { font-size: 12px; color: var(--green-d); margin-top: 5px; line-height: 1.4; }
@@ -457,7 +459,9 @@ button.place-item {
   #place-list { flex: 1; min-height: 0; overflow-y: auto; }
   .place-item { padding: 10px 12px; gap: 10px; }
   .place-item .place-icon { width: 32px; height: 32px; font-size: 15px; margin-top: 0; }
-  .place-item .place-name { font-size: 14px; margin-bottom: 3px; }
+  .place-item .place-name-row { margin-bottom: 3px; }
+  .place-item .place-name { font-size: 14px; }
+  .place-item .place-type { font-size: 10px; }
   .place-item .place-region,
   .place-item .place-memo { font-size: 11px; margin-bottom: 2px; }
   .badge { padding: 1px 7px; font-size: 10px; }
@@ -1227,6 +1231,7 @@ function renderList() {
       currentMode === 'admin' ? getStatusBadge(p.status) : '',
     ].filter(Boolean).join('');
     const name = escapeHtml(p.name);
+    const type = escapeHtml(p.type);
     const region = escapeHtml(p.region);
     const memoHtml = p.memo ? `<div class="place-memo">💬 ${escapeHtml(p.memo)}</div>` : '';
     const ariaLabel = escapeHtml(`${p.name}, ${p.type || '업종 정보 없음'}, ${p.address || '주소 정보 없음'}, ${featureText(p)}${p.memo ? ', 안내: ' + p.memo : ''}. 선택하면 지도에서 위치를 확인합니다.`);
@@ -1236,7 +1241,10 @@ function renderList() {
            role="listitem" aria-label="${ariaLabel}" onclick="selectPlace(${p.id})">
         <div class="place-icon" style="background:${bg}" aria-hidden="true">${emoji}</div>
         <div class="place-info">
-          <div class="place-name">${name}</div>
+          <div class="place-name-row">
+            <span class="place-name">${name}</span>
+            ${p.type ? `<span class="place-type">· ${type}</span>` : ''}
+          </div>
           ${isAllRegion && p.region ? `<div class="place-region">${region}</div>` : ''}
           <div class="place-badges">${badges}</div>
           ${memoHtml}
