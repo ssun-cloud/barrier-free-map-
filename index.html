@@ -212,8 +212,7 @@ button.place-item {
 }
 .place-item .place-info { flex: 1; min-width: 0; }
 .place-item .place-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.place-item .place-type { font-size: 14px; color: var(--gray-600); margin-bottom: 4px; }
-.place-item .place-addr { font-size: 13px; color: var(--gray-400); margin-bottom: 5px; }
+.place-item .place-region { font-size: 13px; color: var(--gray-400); margin-bottom: 5px; }
 .place-item .place-badges { display: flex; gap: 4px; flex-wrap: wrap; }
 .place-item .place-memo { font-size: 12px; color: var(--green-d); margin-top: 5px; line-height: 1.4; }
 .badge {
@@ -459,8 +458,8 @@ button.place-item {
   .place-item { padding: 10px 12px; gap: 10px; }
   .place-item .place-icon { width: 32px; height: 32px; font-size: 15px; margin-top: 0; }
   .place-item .place-name { font-size: 14px; margin-bottom: 3px; }
-  .place-item .place-type,
-  .place-item .place-addr { font-size: 11px; margin-bottom: 2px; }
+  .place-item .place-region,
+  .place-item .place-memo { font-size: 11px; margin-bottom: 2px; }
   .badge { padding: 1px 7px; font-size: 10px; }
   #map-footer { display: none; }
   #public-banner,
@@ -1216,6 +1215,8 @@ function renderList() {
     return;
   }
 
+  const isAllRegion = !document.getElementById('region-select')?.value;
+
   list.innerHTML = filtered.map(p => {
     const emoji = getEmoji(p.type);
     const bg    = getBg(p.hasRamp, p.hasBraille, p.hasAccess);
@@ -1226,9 +1227,7 @@ function renderList() {
       currentMode === 'admin' ? getStatusBadge(p.status) : '',
     ].filter(Boolean).join('');
     const name = escapeHtml(p.name);
-    const type = escapeHtml(p.type);
     const region = escapeHtml(p.region);
-    const address = escapeHtml(p.address);
     const memoHtml = p.memo ? `<div class="place-memo">💬 ${escapeHtml(p.memo)}</div>` : '';
     const ariaLabel = escapeHtml(`${p.name}, ${p.type || '업종 정보 없음'}, ${p.address || '주소 정보 없음'}, ${featureText(p)}${p.memo ? ', 안내: ' + p.memo : ''}. 선택하면 지도에서 위치를 확인합니다.`);
 
@@ -1238,8 +1237,7 @@ function renderList() {
         <div class="place-icon" style="background:${bg}" aria-hidden="true">${emoji}</div>
         <div class="place-info">
           <div class="place-name">${name}</div>
-          <div class="place-type">${type} · ${region}</div>
-          <div class="place-addr">${address}</div>
+          ${isAllRegion && p.region ? `<div class="place-region">${region}</div>` : ''}
           <div class="place-badges">${badges}</div>
           ${memoHtml}
         </div>
